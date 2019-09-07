@@ -8,10 +8,13 @@ class Carousel{
         this[ATTRIBUTE_SYMBOL]=Object.create(null);
         this[EVENT_SYMBOL]=Object.create(null);
         this[STATE_SYMBOL]=Object.create(null);
+        this[PROPERTY_SYMBOL].urls=config.urls;
+        this[PROPERTY_SYMBOL].style=config.style;
+        this[PROPERTY_SYMBOL].position=0;
         this.created();
     }
     log(){
-        console.log("width:", this.width);
+        //console.log("width:", this.width);
         console.log("..................");
     }
     get width(){
@@ -44,16 +47,36 @@ class Carousel{
     }
     created(){
         this.root=document.createElement("div");
-        this.root.style.width="300px";
-        this.root.style.height="300px";
-        this[STATE_SYMBOL].h=0;
-        this.root.style.background=`hsl(${this[STATE_SYMBOL].h}, 100%, 50%)`;
+        this.root.classList.add(this[PROPERTY_SYMBOL].style);
+        for (let d of this[PROPERTY_SYMBOL].urls) {
+            let e = document.createElement("img");
+            e.src = d;
+            this.root.appendChild(e);
+        }
     }
     mounted() {
-        this.root.addEventListener("click",()=>{
-            this[STATE_SYMBOL].h+=60;
-            this.root.style.backgroundColor=`hsl(${this[STATE_SYMBOL].h}, 60%, 70%)`;
-        })
+        let children = Array.prototype.slice.call(this.root.children);
+        let nextFrame = ()=> {
+            let nextPosition = this[PROPERTY_SYMBOL].position + 1;
+            nextPosition = nextPosition % children.length;
+            let current = children[this[PROPERTY_SYMBOL].position],
+            next = children[nextPosition];
+            // 将next放到正确的位置上
+            next.style.transition = "ease 0s";
+            next.style.transform = `translate(${100 - 100 * nextPosition}%)`;
+            setTimeout(() => {
+                // 把current挪出视口
+                current.style.transition = "";
+                current.style.transform = `translate(${-100 - 100 * this[PROPERTY_SYMBOL].position}%)`;
+                console.log(this[PROPERTY_SYMBOL].position);
+                // 把next挪进视口
+                next.style.transition = "";
+                next.style.transform = `translate(${-100 * nextPosition}%)`;
+                this[PROPERTY_SYMBOL].position = nextPosition;
+            }, 16);
+            setTimeout(nextFrame, 3000);
+        };
+        nextFrame();
     }
     unmounted(){
 
